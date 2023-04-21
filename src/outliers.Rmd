@@ -1,0 +1,150 @@
+---
+title: "outliers"
+author: "Hong Niu"
+date: "2023-04-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Imports:
+```{r}
+library(readr)
+library(ggplot2)
+library(tidyverse)
+```
+
+Load data:
+```{r}
+setwd("./")
+full_data = read.csv('../data/boston.csv')
+train_data = read.csv('../data/boston.csv')
+test_data = read.csv('../data/boston.csv')
+```
+
+
+```{r}
+boxplot(train_data$crim,
+main = "Crim",
+xlab = "per capita crime rate by town",
+horizontal = TRUE
+
+)
+```
+```{r}
+boxplot(train_data$zn,
+main = "Zn",
+xlab = "prop. of residential land zoned for lots over 25k sq.ft.",
+horizontal = TRUE
+# notch = TRUE
+)
+```
+
+```{r}
+boxplot(train_data$indus,
+main = "Indus",
+xlab = "prop. of non-retail business acres per town",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$chas,
+main = "Chas",
+xlab = "charles river dummy variable",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$nox,
+main = "Nox",
+xlab = "nitric oxdies concentration (parts per 10 million)",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$rm,
+main = "Rm",
+xlab = "average number of rooms per dwelling",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$age,
+main = "age",
+xlab = "prop. of owner-occupied units built prior to 1940",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$dis,
+main = "dis",
+xlab = "weighted distances to five Boston employment centers",
+horizontal = TRUE
+)
+```
+
+```{r}
+boxplot(train_data$rad,
+main = "rad",
+xlab = "index of access. to radial highways",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$tax,
+main = "tax",
+xlab = "full-value property-tax rate per $10k",
+horizontal = TRUE
+)
+```
+```{r}
+boxplot(train_data$ptratio,
+main = "ptratio",
+xlab = "pupil-teacher ratio by town",
+horizontal = TRUE
+)
+```
+
+
+```{r}
+boxplot(train_data$b,
+main = "b",
+xlab = "b",
+horizontal = TRUE
+)
+```
+
+
+
+
+```{r}
+boxplot(train_data$lstat,
+main = "lstat",
+xlab = "% lower status of the population",
+horizontal = TRUE
+)
+```
+
+```{r}
+boxplot(train_data$medv,
+main = "medv",
+xlab = "median value of owner-occupied homes in $1ks",
+horizontal = TRUE
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
