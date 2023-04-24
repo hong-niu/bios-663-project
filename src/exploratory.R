@@ -4,6 +4,8 @@ library(readr)
 library(ggplot2)
 library(tidyverse)
 library(MASS, include.only = c("boxcox"))
+library(car, include.only = c("vif"))
+library(knitr)
 
 # Read in data and set chas to factor
 boston <- read_table2("boston.txt", col_names = FALSE)
@@ -55,16 +57,16 @@ ggplot(train, aes(x=lstat, y=medv)) +
   ylab('medv')
 
 # Box-cox transformation on full model with untransformed response variable
-bxcx <- boxcox(lm(medv ~ chas*(log(1+crim) + zn + indus + nox + rm + age + log(dis) + 
-                log(rad) + log(tax) + ptratio + b + log(lstat)), 
-            data = train[-c(341, 218, 352),]))
+bxcx <- boxcox(lm(medv ~ log(1+crim) + zn + indus + chas + nox + rm + age + log(dis) + 
+                    log(rad) + log(tax) + ptratio + b + log(lstat), 
+                  data = train)) # consider using train[-c(341, 218, 352),] here
 lambda <- bxcx$x[which.max(bxcx$y)]
 lambda
 
 # Full model
-full.model <- lm(medv^lambda ~ chas*(log(1+crim) + zn + indus + nox + rm + age + log(dis) + 
-                   log(rad) + log(tax) + ptratio + b + log(lstat)), 
-                 data = train[-c(341, 218, 352),])
+full.model <- lm(medv^lambda ~ log(1+crim) + zn + indus + chas + nox + rm + age + log(dis) + 
+                   log(rad) + log(tax) + ptratio + b + log(lstat), 
+                 data = train)
 
 summary(full.model)
 confint(full.model)
@@ -78,5 +80,20 @@ par(mfrow = c(1, 1))
 # Cook's Distance
 plot(full.model, 4)
 
-# Histogram of residuals; looks reasonably normal
+# Histogram of residuals; looks reasonably normal with some outliers
 hist(full.model$residuals, breaks = 25)
+
+## Collinearity analysis ##
+# Variance inflation factors
+vif(full.model)
+
+# Eigenanalysis: scaled SSCP matrix
+X <- model.matrix(full.model)
+Ds_inv_sqrt <- diag((diag(t(X) %*% X))^(-0.5))
+SSCP_scaled <- Ds_inv_sqrt %*% (t(X) %*% X) %*% Ds_inv_sqrt
+eigenvalues <- eigen(SSCP_scaled)$values
+condition <- sqrt(eigenvalues[1]/eigenvalues)
+eigenanalysis <- cbind(round(eigenvalues, 4), condition)
+colnames(eigenanalysis) <- c("Eigenvalue", "Condition Index")
+kable(eigenanalysis, format = "pipe", caption = "Eigenanalysis of scaled SSCP matrix")
+eigen(SSCP_scaled)$vectors[,14] # first and eleventh values clearly nonzero, indicating issues with the intercept and log(tax)
