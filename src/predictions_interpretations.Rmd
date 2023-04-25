@@ -1,0 +1,119 @@
+---
+title: "Untitled"
+output: pdf_document
+date: "2023-04-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+## Predictions
+
+```{r}
+train <- read.csv('../data/train.csv')
+test <- read.csv('../data/test.csv')
+train$chas <- factor(train$chas)
+test$chas <- factor(test$chas)
+final.model <- lm(medv^0.5 ~ log(lstat) + ptratio + rm + chas + log(dis) + nox + log(1+crim) + log(rad) + log(tax), data = train)
+```
+
+
+
+## Interpretations
+
+```{r}
+summary(final.model)
+```
+
+```{r}
+confint(final.model)
+```
+
+
+Our final model is 
+$$
+\begin{aligned}
+MEDV^{0.5} = 10.30 - 0.96*ln(LSTAT) - 0.08*PTRATIO + 0.19*RM + 0.29*I(CHAS=1) - 0.56*ln(DIS) - 1.55*NOX - 0.25*ln(1 + CRIM) + 0.29*ln(RAD) - 0.34*ln(TAX)
+\end{aligned}
+$$
+
+For a 1 unit increase in ln(LSTAT), the log of the percent "lower status", we would expect a change in the square root of median house price of -0.96 on average, holding all other variables constant (95% CI = (-1.07, -0.85)). 
+
+For a 1 unit increase in the pupil-teacher ratio by town, we would expect a change in the square root of median house price of -0.08 on average, holding all other variables constant (95% CI = (-0.10, -0.05)). 
+
+etc.
+
+Holding all other variables constant, the square root of median house prices bounding the Charles River are expected to be 0.29 units higher than those not on the Charles River (95% CI = (0.13, 0.44)). 
+
+## Assessing the model
+
+```{r}
+y_pred = predict(final.model, test, interval = "prediction")
+test <- cbind(test, y_pred)
+```
+
+
+Adjusted $R^2=0.804$, meaning our model accounts for about 80% of the variability in the response variable (square root of median house price).   
+
+```{r}
+sqrt(mean((test$medv^0.5 - test$fit)^2))
+```
+
+$RMSE=0.43$ on test data -- might also need the RMSE of th full model for this to be useful. 
+
+
+Shrinkage: 
+
+```{r}
+r1 <- summary(final.model)$r.squared
+r2 <- cor(test$medv^0.5, test$fit)^2
+shrinkage <- r1 - r2
+print(shrinkage)
+```
+
+The shrinkage is lower than 0.05, suggesting that the model is generalizable. 
+
+
+Prediction Intervals:
+
+```{r}
+test[1, c('lstat', 'ptratio', 'rm', 'chas', 'dis', 'nox', 'crim', 'rad', 'tax')]
+```
+
+```{r}
+head(test[1,c('fit', 'lwr', 'upr')])
+```
+
+
+For houses with above predictors, we are 95% confident the square root of the median price will be in the range (4.47, 6.13) thousands of dollars. We would discuss with subject matter experts whether this is a small enough interval to be practically useful. 
+
+## Plots
+
+```{r}
+ggplot(test, aes(log(lstat), medv^0.5)) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr, fill=chas), alpha = 0.2, show.legend=T) +
+  geom_line(aes(log(lstat), fit, color=chas)) + 
+  geom_point(aes(color=chas), size = 3)  + 
+  scale_x_continuous(name ="\n ln(LSTAT)")+
+  scale_y_continuous(name="MEDV^(0.5)")+
+  theme_bw()
+```
+
+
+```{r}
+ggplot(test, aes(ptratio, medv^0.5)) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr, fill=chas), alpha = 0.2, show.legend=T) +
+  geom_line(aes(ptratio, fit, color=chas)) +
+  geom_point(aes(color=chas), size = 3)  + 
+  scale_x_continuous(name ="\n PTRATIO")+
+  scale_y_continuous(name="MEDV^(0.5)")+
+  theme_bw()
+```
+
+
+
+
+
